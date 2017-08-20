@@ -117,7 +117,7 @@ router.route('/search')
 	}, (err, response) => {
 		const list = JSON.parse(response.body);
 		if (!err)
-			res.status(200).json({ success: true, data: list.LocationList.StopLocation });
+			res.status(200).json({ success: true, data: (Array.isArray(list.LocationList.StopLocation)) ? list.LocationList.StopLocation : [ list.LocationList.StopLocation ] });
 		else {
 			res.status(500).json({
 				success: true,
