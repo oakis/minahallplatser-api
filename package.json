@@ -1,0 +1,20 @@
+{
+  "name": "minahallplatser-api",
+  "version": "1.0.0",
+  "description": "backend for minahallplatser app",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "author": "Anders Ekman",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "express": "^4.15.4",
+    "lodash": "^4.17.4",
+    "moment": "^2.18.1",
+    "request": "^2.81.0"
+  }
+}
