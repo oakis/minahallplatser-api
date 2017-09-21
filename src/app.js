@@ -36,9 +36,9 @@ router.route('/departures')
 	const date = moment().format('YYYY-MM-DD');
 	const time = moment().format('HH:mm');
 	if (!access_token || !id) {
-		res.status(401).json({
+		res.json({
 			success: false,
-			data: 'access_token or id is missing'
+			data: ''
 		});
 		return;
 	}
@@ -111,9 +111,9 @@ router.route('/search')
 .post((req, res) => {
 	const { access_token, busStop } = req.body;
 	if (!access_token || !busStop) {
-		res.status(401).json({
+		res.json({
 			success: false,
-			data: 'access_token or id is missing'
+			data: ''
 		});
 		return;
 	}
@@ -144,9 +144,9 @@ router.route('/gps')
 .post((req, res) => {
 	const { access_token, latitude, longitude } = req.body;
 	if (!access_token || !latitude || !longitude) {
-		res.status(401).json({
+		res.json({
 			success: false,
-			data: 'access_token, latitude or longitude is missing'
+			data: ''
 		});
 		return;
 	}
