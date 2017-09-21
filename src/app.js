@@ -125,7 +125,7 @@ router.route('/search')
 	}, (err, response) => {
 		const list = JSON.parse(response.body);
 		if (!err && list.LocationList.hasOwnProperty('StopLocation')) {
-			res.status(200).json({ success: true, data: (Array.isArray(list.LocationList.StopLocation)) ? list.LocationList.StopLocation : [ list.LocationList.StopLocation ] });
+			res.status(200).json({ success: true, data: (Array.isArray(list.LocationList.StopLocation)) ? list.LocationList.StopLocation.splice(0,10) : [ list.LocationList.StopLocation ] });
 		} else if (list.LocationList.StopLocation == null) {
 			res.json({
 				success: false,
