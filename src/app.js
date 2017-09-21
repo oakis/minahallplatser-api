@@ -51,6 +51,7 @@ router.route('/departures')
 		const departures = JSON.parse(response.body);
 		if (departures.DepartureBoard) {
 			if (departures.DepartureBoard.Departure) {
+				departures.DepartureBoard.Departure = (departures.DepartureBoard.Departure.length) ? departures.DepartureBoard.Departure : [departures.DepartureBoard.Departure];
 				const serverdate = departures.DepartureBoard.serverdate || moment().format('YYYY-MM-DD');
 				const servertime = departures.DepartureBoard.servertime || moment().format('HH:mm');
 				const now = moment(
@@ -76,22 +77,29 @@ router.route('/departures')
 				mapdDepartures = _.map(mapdDepartures, (dep, index) => {
 					return { ...dep, index };
 				});
-				res.status(200).json({
-					success: true,
-					data: {
-						departures: mapdDepartures,
-						time: servertime,
-						date: serverdate
-					}
-				});
+				if (mapdDepartures.length > 0) {
+					res.status(200).json({
+						success: true,
+						data: {
+							departures: mapdDepartures,
+							time: servertime,
+							date: serverdate
+						}
+					});
+				} else {
+					res.json({
+						success: false,
+						data: 'Inga avgångar hittades på denna hållplats.'
+					});
+				}
 			} else {
-				res.status(500).json({
+				res.json({
 					success: false,
 					data: 'Inga avgångar hittades på denna hållplats.'
 				});
 			}
 		} else {
-			res.status(500).json({
+			res.json({
 				success: false,
 				data: 'Något gick snett. Försök igen om en stund.'
 			});
@@ -116,12 +124,17 @@ router.route('/search')
 		}
 	}, (err, response) => {
 		const list = JSON.parse(response.body);
-		if (!err)
+		if (!err && list.LocationList.hasOwnProperty('StopLocation')) {
 			res.status(200).json({ success: true, data: (Array.isArray(list.LocationList.StopLocation)) ? list.LocationList.StopLocation : [ list.LocationList.StopLocation ] });
-		else {
-			res.status(500).json({
-				success: true,
-				data: { searchError: 'Kunde inte kontakta Västtrafik. Försök igen senare.' }
+		} else if (list.LocationList.StopLocation == null) {
+			res.json({
+				success: false,
+				data: 'Hittade inga hållplatser. Prova att söka på något annat.'
+			})
+		} else {
+			res.json({
+				success: false,
+				data: 'Kunde inte kontakta Västtrafik. Försök igen senare.'
 			});
 		}
 	});
@@ -145,9 +158,9 @@ router.route('/gps')
 	}, (err, response) => {
 		const list = JSON.parse(response.body);
 		if (!list.LocationList.StopLocation) {
-			res.status(500).json({
+			res.json({
 				success: false,
-				data: { searchError: 'Hittade inga hållplatser nära dig.' }
+				data: 'Hittade inga hållplatser nära dig.'
 			});
 		} else {
 			const mapdList = _.uniqBy(_.filter(list.LocationList.StopLocation, (o) => !o.track), 'name');
