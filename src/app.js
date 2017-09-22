@@ -47,8 +47,8 @@ router.route('/departures')
 		auth: {
 			'bearer': access_token
 		}
-	}, (err, response) => {
-		const departures = JSON.parse(response.body);
+	}, (err, response, body) => {
+		const departures = JSON.parse(body);
 		if (departures.DepartureBoard) {
 			if (departures.DepartureBoard.Departure) {
 				departures.DepartureBoard.Departure = (departures.DepartureBoard.Departure.length) ? departures.DepartureBoard.Departure : [departures.DepartureBoard.Departure];
@@ -122,8 +122,8 @@ router.route('/search')
 		auth: {
 			'bearer': access_token
 		}
-	}, (err, response) => {
-		const list = JSON.parse(response.body);
+	}, (err, response, body) => {
+		const list = JSON.parse(body);
 		if (!err && list.LocationList.hasOwnProperty('StopLocation')) {
 			res.status(200).json({ success: true, data: (Array.isArray(list.LocationList.StopLocation)) ? list.LocationList.StopLocation.splice(0,10) : [ list.LocationList.StopLocation ] });
 		} else if (list.LocationList.StopLocation == null) {
@@ -155,8 +155,8 @@ router.route('/gps')
 		auth: {
 			'bearer': access_token
 		}
-	}, (err, response) => {
-		const list = JSON.parse(response.body);
+	}, (err, response, body) => {
+		const list = JSON.parse(body);
 		if (!list.LocationList.StopLocation) {
 			res.json({
 				success: false,
