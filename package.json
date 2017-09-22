@@ -15,6 +15,6 @@
     "express": "^4.15.4",
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
-    "request": "^2.81.0"
+    "r2": "github:mikeal/r2#2ab2ac394dd0b98a7a5e2fb0b81094f8c613a77d"
   }
 }
