@@ -10,6 +10,15 @@ app.use(bodyParser.json());
 
 const port = 3333;
 
+function filterDepartures(list) {
+	if (list.LocationList.hasOwnProperty('StopLocation')) {
+		const data = (Array.isArray(list.LocationList.StopLocation)) ? list.LocationList.StopLocation.splice(0,10) : [ list.LocationList.StopLocation ];
+		const filtered = _.filter(data, (stop) => !stop.name.startsWith('.'));
+		return filtered;
+	}
+	return [];
+}
+
 const router = express.Router();
 
 router.get('/', (req, res) => {
@@ -103,6 +112,8 @@ router.route('/departures')
 	}
 });
 
+
+
 router.route('/search')
 .post(async (req, res) => {
 	const { access_token, busStop } = req.body;
@@ -117,9 +128,10 @@ router.route('/search')
 		'Authorization': `Bearer ${access_token}`
 	}
 	const list = await request(`https://api.vasttrafik.se/bin/rest.exe/v2/location.name?input=${busStop}&format=json`, { headers }).json;
-	if (list.LocationList.hasOwnProperty('StopLocation')) {
-		res.status(200).json({ success: true, data: (Array.isArray(list.LocationList.StopLocation)) ? list.LocationList.StopLocation.splice(0,10) : [ list.LocationList.StopLocation ] });
-	} else if (list.LocationList.StopLocation == null) {
+	const filteredResponse = filterDepartures(list);
+	if (filteredResponse.length > 0) {
+		res.status(200).json({ success: true, data: filteredResponse });
+	} else if (filteredResponse.length === 0) {
 		res.json({
 			success: false,
 			data: 'Hittade inga hållplatser. Prova att söka på något annat.'
@@ -146,13 +158,14 @@ router.route('/gps')
 		'Authorization': `Bearer ${access_token}`
 	}
 	const list = await request(`https://api.vasttrafik.se/bin/rest.exe/v2/location.nearbystops?originCoordLat=${latitude}&originCoordLong=${longitude}&format=json`, { headers }).json;
-	if (!list.LocationList.StopLocation) {
+	const filteredResponse = filterDepartures(list);
+	if (filteredResponse.length === 0) {
 		res.json({
 			success: false,
 			data: 'Hittade inga hållplatser nära dig.'
 		});
 	} else {
-		const mapdList = _.uniqBy(_.filter(list.LocationList.StopLocation, (o) => !o.track), 'name');
+		const mapdList = _.uniqBy(_.filter(filteredResponse, (o) => !o.track), 'name');
 		res.status(200).json({ success: true, data: mapdList });
 	}
 });
