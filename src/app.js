@@ -31,11 +31,11 @@ router.get('/', (req, res) => {
 
 router.use((req, res, next) => {
 	if (req.body.id)
-		console.log(`${req.method}: ${req.url} - id: ${req.body.id} token: ${req.body.access_token}`);
+		console.log(`${moment().format()} - ${req.method}: ${req.url} - id: ${req.body.id} token: ${req.body.access_token}`);
 	else if (req.body.busStop)
-		console.log(`${req.method}: ${req.url} - search: ${req.body.busStop} token: ${req.body.access_token}`);
+		console.log(`${moment().format()} - ${req.method}: ${req.url} - search: ${req.body.busStop} token: ${req.body.access_token}`);
 	else if (req.body.latitude && req.body.longitude)
-		console.log(`${req.method}: ${req.url} - latitude: ${req.body.latitude} longitude: ${req.body.longitude} token: ${req.body.access_token}`);	
+		console.log(`${moment().format()} - ${req.method}: ${req.url} - latitude: ${req.body.latitude} longitude: ${req.body.longitude} token: ${req.body.access_token}`);
 	next();
 });
 
