@@ -47,7 +47,7 @@ router.route('/departures')
 	if (!access_token || !id) {
 		return res.json({
 			success: false,
-			data: ''
+			data: []
 		});
 	}
 	const headers = {
@@ -120,7 +120,7 @@ router.route('/search')
 	if (!access_token || !busStop) {
 		return res.json({
 			success: false,
-			data: ''
+			data: []
 		});
 	}
 	const headers = {
@@ -150,7 +150,7 @@ router.route('/gps')
 	if (!access_token || !latitude || !longitude) {
 		return res.json({
 			success: false,
-			data: ''
+			data: []
 		});
 	}
 	const headers = {
