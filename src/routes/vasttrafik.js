@@ -1,46 +1,17 @@
 const express = require('express');
+const router = express.Router();
 const moment = require('moment');
 const _ = require('lodash');
-const bodyParser = require('body-parser');
 const request = require('r2');
-const app = express();
 
-const firebaseRouter = require('./routes/firebase');
-const vasttrafikRouter = require('./routes/vasttrafik');
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
-const port = 3333;
-
-function filterDepartures(list) {
-	if (list.LocationList.hasOwnProperty('StopLocation')) {
-		const data = (Array.isArray(list.LocationList.StopLocation)) ? list.LocationList.StopLocation.splice(0,10) : [ list.LocationList.StopLocation ];
-		const filtered = _.filter(data, (stop) => !stop.name.startsWith('.'));
-		return filtered;
-	}
-	return [];
-}
-
-const router = express.Router();
-
-router.get('/', (req, res) => {
-	res.json(
+router.route('/')
+.get((req, res) => {
+    res.json(
 		{
-			message: 'Hello Public Transit World!'
+			message: 'Hello Västtrafik World!'
 		}
 	);
-});
-
-router.use((req, res, next) => {
-	if (req.body.id)
-		console.log(`${moment().format()} - ${req.method}: ${req.url} - id: ${req.body.id} token: ${req.body.access_token}`);
-	else if (req.body.busStop)
-		console.log(`${moment().format()} - ${req.method}: ${req.url} - search: ${req.body.busStop} token: ${req.body.access_token}`);
-	else if (req.body.latitude && req.body.longitude)
-		console.log(`${moment().format()} - ${req.method}: ${req.url} - latitude: ${req.body.latitude} longitude: ${req.body.longitude} token: ${req.body.access_token}`);
-	next();
-});
+})
 
 router.route('/departures')
 .post(async (req, res) => {
@@ -173,9 +144,4 @@ router.route('/gps')
 	}
 });
 
-app.use('/api', router);
-app.use('/api/firebase', firebaseRouter);
-app.use('/api/vasttrafik', vasttrafikRouter);
-app.listen(port, function () {
-  	console.log(`Running Mina Hållplatser API on port ${port}!`);
-});
+module.exports = router;
