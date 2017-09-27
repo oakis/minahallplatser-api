@@ -4,6 +4,15 @@ const moment = require('moment');
 const _ = require('lodash');
 const request = require('r2');
 
+function filterDepartures(list) {
+	if (list.LocationList.hasOwnProperty('StopLocation')) {
+		const data = (Array.isArray(list.LocationList.StopLocation)) ? list.LocationList.StopLocation.splice(0,10) : [ list.LocationList.StopLocation ];
+		const filtered = _.filter(data, (stop) => !stop.name.startsWith('.'));
+		return filtered;
+	}
+	return [];
+}
+
 router.route('/')
 .get((req, res) => {
     res.json(

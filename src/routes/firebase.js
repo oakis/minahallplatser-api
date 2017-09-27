@@ -14,10 +14,14 @@ const fbAdmin = admin.initializeApp({
 
 let db = [];
 let users = [];
+let stats = [];
 
-fbAdmin.database().ref().on('value', snapshot => {
+const firebase = fbAdmin.database().ref();
+
+firebase.on('value', snapshot => {
     db = snapshot.val();
     users = _.values(snapshot.val().users);
+    stats = snapshot.val().stats;
 });
 
 // Endpoints
@@ -30,6 +34,8 @@ router.route('/')
 		}
 	);
 })
+
+// Users
 
 router.route('/userscount')
 .get((req, res) => {
@@ -56,6 +62,60 @@ router.route('/users')
 .get((req, res) => {
     const data = _.values(_.mapValues(db.users, function(value, key) { value.id = key; return value; }))
     res.json(data);
+})
+
+// Counts
+
+router.route('/departurescount')
+.get((req, res) => {
+    res.json({
+        success: true,
+        departuresCount: stats.departuresCount
+    });
+})
+.post((req, res) => {
+    if (stats.departuresCount >= 0) {
+        const newValue = parseInt(stats.departuresCount) + parseInt(req.body.count);
+        firebase.child('stats').update({
+            departuresCount: newValue
+        });
+        res.json({
+            success: true,
+            message: `Departures Count Updated ${newValue}`,
+            departuresCount: newValue
+        });
+    } else {
+        res.json({
+            success: false,
+            message: 'Firebase is not loaded.'
+        })
+    }
+})
+
+router.route('/stopscount')
+.get((req, res) => {
+    res.json({
+        success: true,
+        stopsCount: stats.stopsCount
+    });
+})
+.post((req, res) => {
+    if (stats.stopsCount >= 0) {
+        const newValue = parseInt(stats.stopsCount) + 1;
+        firebase.child('stats').update({
+            stopsCount: newValue
+        });
+        res.json({
+            success: true,
+            message: `Stops Count Updated to ${newValue}`,
+            stopsCount: newValue
+        });
+    } else {
+        res.json({
+            success: false,
+            message: 'Firebase is not loaded.'
+        })
+    }
 })
 
 
