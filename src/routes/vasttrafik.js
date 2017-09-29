@@ -64,7 +64,12 @@ async function getDepartures (req, res) {
 						mapdDepartures.push({ ...item, nextStop: null, timeLeft: (timeLeft <= 0) ? 0 : timeLeft });
 					}
 				});
-
+				mapdDepartures = _.map(mapdDepartures, (dep, index) => {
+					if (dep.timeLeft > dep.nextStop) {
+						return { ...dep, timeLeft: dep.nextStop, nextStop: dep.timeLeft };
+					}
+					return dep;
+				});
 				mapdDepartures = _.orderBy(mapdDepartures, ['timeLeft', 'nextStop']);
 				mapdDepartures = _.map(mapdDepartures, (dep, index) => {
 					return { ...dep, index };
