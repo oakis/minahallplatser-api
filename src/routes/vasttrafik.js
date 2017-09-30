@@ -112,7 +112,7 @@ async function getDepartures (req, res) {
 				success: false,
 				data: 'Något gick snett. Försök igen om en stund.'
 			});
-			console.log(`{$req.url} error:`, error);
+			console.log(req.url + ' error:', error);
 		}
 	}
 }
@@ -158,7 +158,7 @@ async function searchStops (req, res) {
 				success: false,
 				data: 'Något gick snett. Försök igen om en stund.'
 			});
-			console.log(`{$req.url} error:`, error);
+			console.log(req.url + ' error:', error);
 		}
 	}
 }
@@ -199,7 +199,7 @@ async function getNearbyStops (req, res) {
 				success: false,
 				data: 'Något gick snett. Försök igen om en stund.'
 			});
-			console.log(`{$req.url} error:`, error);
+			console.log(req.url + ' error:', error);
 		}
 	}
 }
