@@ -25,8 +25,10 @@ router.route('/')
 
 router.route('/departures').post(getDepartures);
 
+let retryCount = 1;
 async function getDepartures (req, res) {
 	try {
+		const timeSpan = retryCount * 90;
 		const { access_token, id } = req.body;
 		const date = moment().format('YYYY-MM-DD');
 		const time = moment().format('HH:mm');
@@ -40,7 +42,7 @@ async function getDepartures (req, res) {
 			'Content-Type': 'application/x-www-form-urlencoded',
 			'Authorization': `Bearer ${access_token}`
 		}
-		const departures = await request(`https://api.vasttrafik.se/bin/rest.exe/v2/departureBoard?id=${id}&date=${date}&time=${time}&format=json&timeSpan=90&maxDeparturesPerLine=2&needJourneyDetail=0`, { headers }).json;
+		const departures = await request(`https://api.vasttrafik.se/bin/rest.exe/v2/departureBoard?id=${id}&date=${date}&time=${time}&format=json&timeSpan=${timeSpan}&maxDeparturesPerLine=2&needJourneyDetail=0`, { headers }).json;
 		if (departures.DepartureBoard) {
 			if (departures.DepartureBoard.Departure) {
 				departures.DepartureBoard.Departure = (departures.DepartureBoard.Departure.length) ? departures.DepartureBoard.Departure : [departures.DepartureBoard.Departure];
@@ -65,7 +67,7 @@ async function getDepartures (req, res) {
 					}
 				});
 				mapdDepartures = _.map(mapdDepartures, (dep, index) => {
-					if (dep.timeLeft > dep.nextStop) {
+					if (dep.timeLeft > dep.nextStop && dep.nextStop !== null) {
 						return { ...dep, timeLeft: dep.nextStop, nextStop: dep.timeLeft };
 					}
 					return dep;
@@ -75,6 +77,7 @@ async function getDepartures (req, res) {
 					return { ...dep, index };
 				});
 				if (mapdDepartures.length > 0) {
+					retryCount = 1;
 					res.status(200).json({
 						success: true,
 						data: {
@@ -91,10 +94,15 @@ async function getDepartures (req, res) {
 					});
 				}
 			} else {
-				res.json({
-					success: false,
-					data: 'Inga avgångar hittades på denna hållplats.'
-				});
+				if (timeSpan > 1440) {
+					res.json({
+						success: false,
+						data: 'Inga avgångar hittades på denna hållplats.'
+					});
+				} else {
+					retryCount++;
+					getDepartures(req, res);
+				}
 			}
 		} else {
 			res.json({
