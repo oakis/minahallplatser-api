@@ -23,6 +23,48 @@ router.route('/')
 	);
 })
 
+router.route('/favorites').post(getFavorites);
+
+async function getFavorites (req, res) {
+	try {
+		const { access_token, id, lines } = req.body;
+		console.log(req.body.lines);
+		const date = moment().format('YYYY-MM-DD');
+		const time = moment().format('HH:mm');
+		if (!access_token || !id) {
+			return res.json({
+				success: false,
+				data: []
+			});
+		}
+		const headers = {
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'Authorization': `Bearer ${access_token}`
+		}
+		const departures = await request(`https://api.vasttrafik.se/bin/rest.exe/v2/departureBoard?id=${id}&date=${date}&time=${time}&format=json&timeSpan=90&maxDeparturesPerLine=1&needJourneyDetail=0`, { headers }).json;
+		console.log('departures');
+		console.log(departures);
+		const result = _.chain(departures.DepartureBoard.Departure).map(departure => {
+			const line = `${departure.sname} ${departure.direction}`;
+			if (_.includes(lines, line)) {
+				return departure;
+			}
+		}).filter(dep => dep).value();
+		console.log('result');
+		console.log(result);
+		res.json({
+			success: true,
+			data: result
+		});
+	} catch (e) {
+		console.log(e);
+		res.json({
+			success: false,
+			data: e
+		})
+	}
+}
+
 router.route('/departures').post(getDepartures);
 
 let retryCount = 1;
@@ -51,34 +93,27 @@ async function getDepartures (req, res) {
 				const now = moment(
 					`${serverdate} ${servertime}`
 				);
-				let mapdDepartures = [];
-				departures.DepartureBoard.Departure.forEach((item) => {
-					const findIndex = _.findIndex(mapdDepartures,
+				const mergeDepartures = [];
+				_.forEach(departures.DepartureBoard.Departure, (item) => {
+					const findIndex = _.findIndex(mergeDepartures,
 						{ name: item.name, direction: item.direction }
 					);
 					const timeDeparture = moment(
 						`${item.date} ${item.rtTime || item.time}`
 					);
 					const timeLeft = timeDeparture.diff(now, 'minutes');
-					if (findIndex !== -1 && !mapdDepartures[findIndex].nextStop) {
-						mapdDepartures[findIndex].nextStop = timeLeft;
+					if (findIndex !== -1 && !mergeDepartures[findIndex].nextStop) {
+						mergeDepartures[findIndex].nextStop = timeLeft;
 					} else if (findIndex === -1) {
-						mapdDepartures.push({ ...item, nextStop: null, timeLeft: (timeLeft <= 0) ? 0 : timeLeft });
+						mergeDepartures.push({ ...item, nextStop: null, timeLeft: (timeLeft <= 0) ? 0 : timeLeft });
 					}
 				});
-				mapdDepartures = _.map(mapdDepartures, (dep, index) => {
-					if (dep.timeLeft > dep.nextStop && dep.nextStop !== null) {
-						return { ...dep, timeLeft: dep.nextStop, nextStop: dep.timeLeft };
-					}
-					return dep;
-				});
-				mapdDepartures = _.orderBy(mapdDepartures, ['timeLeft', 'nextStop']);
-				mapdDepartures = _.map(mapdDepartures, (dep, index) => {
-					return { ...dep, index };
-				});
+				const mapdDepartures = _.chain(mergeDepartures)
+					.map(dep => (dep.timeLeft > dep.nextStop && dep.nextStop !== null) ? { ...dep, timeLeft: dep.nextStop, nextStop: dep.timeLeft } : dep)
+					.orderBy(['timeLeft', 'nextStop']).value();
 				if (mapdDepartures.length > 0) {
 					retryCount = 1;
-					res.status(200).json({
+					res.json({
 						success: true,
 						data: {
 							departures: mapdDepartures,
@@ -144,7 +179,7 @@ async function searchStops (req, res) {
 		const list = await request(`https://api.vasttrafik.se/bin/rest.exe/v2/location.name?input=${busStop}&format=json`, { headers }).json;
 		const filteredResponse = filterDepartures(list);
 		if (filteredResponse.length > 0) {
-			res.status(200).json({ success: true, data: filteredResponse });
+			res.json({ success: true, data: filteredResponse });
 		} else if (filteredResponse.length === 0) {
 			res.json({
 				success: false,
@@ -195,7 +230,7 @@ async function getNearbyStops (req, res) {
 			});
 		} else {
 			const mapdList = _.uniqBy(_.filter(filteredResponse, (o) => !o.track), 'name');
-			res.status(200).json({ success: true, data: mapdList });
+			res.json({ success: true, data: mapdList });
 		}
 	} catch (e) {
 		try {
