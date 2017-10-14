@@ -101,6 +101,9 @@ async function getDepartures (req, res) {
 					const timeDeparture = moment(
 						`${item.date} ${item.rtTime || item.time}`
 					);
+					const splitDirection = item.direction.split('via');
+					item.direction = splitDirection[0];
+					item.via = (splitDirection[1]) ? `via${splitDirection[1]}` : '';
 					const timeLeft = timeDeparture.diff(now, 'minutes');
 					if (findIndex !== -1 && !mergeDepartures[findIndex].nextStop) {
 						mergeDepartures[findIndex].nextStop = timeLeft;
@@ -109,7 +112,7 @@ async function getDepartures (req, res) {
 					}
 				});
 				const mapdDepartures = _.chain(mergeDepartures)
-					.map(dep => (dep.timeLeft > dep.nextStop && dep.nextStop !== null) ? { rtTime: dep.rtTime, fgColor: dep.fgColor, bgColor: dep.bgColor, sname: dep.sname, direction: dep.direction, track: dep.track, timeLeft: dep.nextStop, nextStop: dep.timeLeft, journeyid: dep.journeyid } : { rtTime: dep.rtTime, fgColor: dep.fgColor, bgColor: dep.bgColor, sname: dep.sname, direction: dep.direction, track: dep.track, timeLeft: dep.timeLeft, nextStop: dep.nextStop, journeyid: dep.journeyid })
+					.map(dep => (dep.timeLeft > dep.nextStop && dep.nextStop !== null) ? { via: dep.via, rtTime: dep.rtTime, fgColor: dep.fgColor, bgColor: dep.bgColor, sname: dep.sname, direction: dep.direction, track: dep.track, timeLeft: dep.nextStop, nextStop: dep.timeLeft, journeyid: dep.journeyid } : { via: dep.via, rtTime: dep.rtTime, fgColor: dep.fgColor, bgColor: dep.bgColor, sname: dep.sname, direction: dep.direction, track: dep.track, timeLeft: dep.timeLeft, nextStop: dep.nextStop, journeyid: dep.journeyid })
 					.orderBy(['timeLeft', 'nextStop']).value();
 				if (mapdDepartures.length > 0) {
 					retryCount = 1;
