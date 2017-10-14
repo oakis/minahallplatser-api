@@ -109,7 +109,7 @@ async function getDepartures (req, res) {
 					}
 				});
 				const mapdDepartures = _.chain(mergeDepartures)
-					.map(dep => (dep.timeLeft > dep.nextStop && dep.nextStop !== null) ? { ...dep, timeLeft: dep.nextStop, nextStop: dep.timeLeft } : dep)
+					.map(dep => (dep.timeLeft > dep.nextStop && dep.nextStop !== null) ? { rtTime: dep.rtTime, fgColor: dep.fgColor, bgColor: dep.bgColor, sname: dep.sname, direction: dep.direction, track: dep.track, timeLeft: dep.nextStop, nextStop: dep.timeLeft, journeyid: dep.journeyid } : { rtTime: dep.rtTime, fgColor: dep.fgColor, bgColor: dep.bgColor, sname: dep.sname, direction: dep.direction, track: dep.track, timeLeft: dep.timeLeft, nextStop: dep.nextStop, journeyid: dep.journeyid })
 					.orderBy(['timeLeft', 'nextStop']).value();
 				if (mapdDepartures.length > 0) {
 					retryCount = 1;
@@ -117,8 +117,6 @@ async function getDepartures (req, res) {
 						success: true,
 						data: {
 							departures: mapdDepartures,
-							time: servertime,
-							date: serverdate,
 							timestamp: moment().format()
 						}
 					});
@@ -179,7 +177,7 @@ async function searchStops (req, res) {
 		const list = await request(`https://api.vasttrafik.se/bin/rest.exe/v2/location.name?input=${busStop}&format=json`, { headers }).json;
 		const filteredResponse = filterDepartures(list);
 		if (filteredResponse.length > 0) {
-			res.json({ success: true, data: filteredResponse });
+			res.json({ success: true, data: _.map(filteredResponse, item => { return { id: item.id, name: item.name }; }) });
 		} else if (filteredResponse.length === 0) {
 			res.json({
 				success: false,
@@ -230,7 +228,7 @@ async function getNearbyStops (req, res) {
 			});
 		} else {
 			const mapdList = _.uniqBy(_.filter(filteredResponse, (o) => !o.track), 'name');
-			res.json({ success: true, data: mapdList });
+			res.json({ success: true, data: _.map(mapdList, item => { return { id: item.id, name: item.name }; }) });
 		}
 	} catch (e) {
 		try {
